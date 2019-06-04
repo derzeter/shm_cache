@@ -1,12 +1,20 @@
-<?php 
+<?php
+
+// Exception class
+
+class ForbiddenException extends Exception {};
 
 //
 // For shm_cache class to work, /dev/shm needs to be there (on filesystem), and needs to be of good side (df -h to see)
 //
 
-class shm_cache { 
-    
+class shm_cache {
+
+// path might vary depending of OS - usually in *ix - its /dev/shm/
+
     public $path="/dev/shm/";
+
+// unsupported file types - So if one tries to create executable files in cache.
 
     public $unsupported = array(
         'php',
@@ -14,25 +22,25 @@ class shm_cache {
     );
 
 
-// 
+//
 // setpath(parameter[directory of /dev/shm/, with leadeing and last /])
 // save the path of server RAM
 //
 
-    function setpath($parameter) { 
+    function setpath($parameter) {
 	$this->path = $parameter;
-    } 
+    }
 
 //
 // createdir(paramater[directory within /dev/shm/)
 // create directory in RAM if caching system relies on multiple directories
 //
 
-    function createdir($parameter) { 
+    function createdir($parameter) {
 		if (!file_exists($this->path.$parameter)) {
     			mkdir($this->path.$parameter, 0777, true);
 		}
-    } 
+    }
 
 
 //
@@ -41,14 +49,14 @@ class shm_cache {
 // return value : 0 on file created, -1 on error, 1 on file already existing.
 //
 
-    function cache_write($dir,$parameter,$data,$time) { 
+    function cache_write($dir,$parameter,$data,$time) {
 
-	// Check that cache is not trying to create a forbidden file	
-	$ext =  strtolower(pathinfo($parameter, PATHINFO_EXTENSION)); 
-		if (in_array($ext, $this->unsupported)) die();
+	// Check that cache is not trying to create a forbidden file
+	$ext =  strtolower(pathinfo($parameter, PATHINFO_EXTENSION));
+		if (in_array($ext, $this->unsupported)) { throw new ForbiddenException(); return 0; } // trying to create forbidden file means exception to throw.
 
 	$err=0;
-	clearstatcache(); 
+	clearstatcache();
 
 	if($time>0) {
 	       try {
@@ -78,7 +86,7 @@ class shm_cache {
 
 	return 0;
 
-    } 
+    }
 
 //
 // cache_write(dir[directory within shm],parameter[file name to write],data)
@@ -86,11 +94,11 @@ class shm_cache {
 // return value : 'data' on file read, -1 on error
 //
 
-    function cache_read($dir,$parameter) { 
+    function cache_read($dir,$parameter) {
 
-	// Check that cache is not trying to read a forbidden file	
-	$ext =  strtolower(pathinfo($parameter, PATHINFO_EXTENSION)); 
-		if (in_array($ext, $this->unsupported)) die();
+	// Check that cache is not trying to read a forbidden file
+	$ext =  strtolower(pathinfo($parameter, PATHINFO_EXTENSION));
+		if (in_array($ext, $this->unsupported)) { throw new ForbiddenException(); return 0; } // trying to read forbidden file means exception to throw.
 	$data="";
 	try {
 		$fp = fopen($this->path.$dir."/".$parameter,"r");
@@ -103,8 +111,8 @@ class shm_cache {
 
 	return $data;
 
-    } 
+    }
 
 
-} 
+}
 ?>

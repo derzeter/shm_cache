@@ -41,7 +41,16 @@ sleep(1);
 
 
 echo "trying to create a forbidden cache file\n";
+try {
 $res = $cache->cache_write("cache","test_cache.php",md5(rand(0,10000)),1);
+} catch (ForbiddenException $e) {
+  echo "Something wrong happened.\n";
+  die();
+} 
+
 echo "Succeded to create a forbidden cache file\n";
+
+
+
 
 ?>
